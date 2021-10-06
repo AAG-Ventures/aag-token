@@ -90,11 +90,11 @@ contract('AAGVestingContract', (accounts) => {
         await vestingContract.createVestingSchedule(accounts[3], "500000000000000000000000", vestingStart, 2 * 365, 0, { from: owner });
         await time.increaseTo(blockTime.add(time.duration.days(180)));
         let available3 = await vestingContract.availableWithdrawAmount(accounts[3], { from: accounts[3] }); 
-        assert.equal(available3.toString().substr(0, 12), '123287195585', 'Incorrect unlocked amount');
+        assert.equal(available3.toString().substr(0, 12), '123287195585', 'Incorrect unlocked amount 1');
         
         await vestingContract.cancelVestingForBeneficiary(accounts[3]); 
         let availableAfterCancel3 = await vestingContract.availableWithdrawAmount(accounts[3], { from: accounts[3] }); 
-        assert.equal(availableAfterCancel3.toString().substr(0, 12), "123287195585", 'Incorrected unlocked amount');
+        assert.equal(availableAfterCancel3.toString().substr(0, 12), "123287195585", 'Incorrected unlocked amount 2');
     });
 
     it('Check if vesting is canceled properly', async () => {

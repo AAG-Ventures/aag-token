@@ -168,7 +168,7 @@ contract AAGToken is ERC20, Ownable {
 
   function setTokenBirthday(uint256 _tokenBirthDate) public onlyOwner {
     require(tokenBirthDate == 0, 'Already set');
-    require(tokenBirthDate < block.timestamp, "Can't be a date in the past");
+    require(_tokenBirthDate > block.timestamp, "Can't be a date in the past");
     tokenBirthDate = _tokenBirthDate;
   }
 
@@ -182,21 +182,20 @@ contract AAGToken is ERC20, Ownable {
     vestingContractAddress = _vestingContractAddress;
   }
 
-  function claimInitialPoolTokens() public onlyOwner {
+  function claimInitialPoolTokens() public onlyOwner tokenBirthdayDefined {
     require(initialPoolClaimed == false, 'Already claimed');
-    require(tokenBirthDate != 0, 'Initialization have not started');
     require(tokenBirthDate < block.timestamp, "Can't claim tokens before the IDO");
     initialPoolClaimed = true;
     _transfer(address(this), owner(), LIQUIDITY_POOL_TOKENS + STRATEGIC_BACKERS_POOL + PUBLIC_TOKENS);
   }
 
-  function claimTreasuryTokens() public onlyOwner lockUpFinished {
+  function claimTreasuryTokens() public onlyOwner lockUpFinished tokenBirthdayDefined {
     require(treasuryTokensClaimed == false, 'Already claimed');
     treasuryTokensClaimed = true;
     _transfer(address(this), owner(), TREASURY_TOKENS);
   }
 
-  function claimVestingTokens() public onlyOwner lockUpFinished {
+  function claimVestingTokens() public onlyOwner lockUpFinished tokenBirthdayDefined {
     require(vestingContractAddress != address(0));
     require(vestingTokensClaimed == false, 'Already claimed');
     vestingTokensClaimed = true;
