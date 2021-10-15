@@ -4,11 +4,12 @@ const { expectEvent, time } = require('@openzeppelin/test-helpers');
 
 contract('AAGToken', (accounts) => {
   const TOTAL_SUPPLY = 1000000000e18;
-  const owner = accounts[0];
+  const recoveryAdmin = accounts[0];
+  const admin = accounts[1];
   let blockTime;
   let tokenContract;
 
-  it('Should mint a 1 000 000 000 AAG tokens to the owners account', async () => {
+  it('Should mint a 1 000 000 000 AAG tokens to the admins account', async () => {
     tokenContract = await AAGToken.deployed();
     const balanceLocked = await tokenContract.balanceOf(tokenContract.address);
     assert.equal(TOTAL_SUPPLY / balanceLocked, 1, '1 000 000 000 is not in the first account');
@@ -37,7 +38,7 @@ contract('AAGToken', (accounts) => {
 
     // Initial pool
     try {
-      await tokenContract.claimInitialPoolTokens({ from: owner });
+      await tokenContract.claimInitialPoolTokens({ from: recoveryAdmin });
     } catch (e) {
       errorMessage = e.reason;
     }
@@ -46,11 +47,11 @@ contract('AAGToken', (accounts) => {
     blockTime = await time.latest();
     // Initial pool
     await time.increaseTo(blockTime.add(time.duration.days(2)));
-    claimRecept = await tokenContract.claimInitialPoolTokens({ from: owner });
+    claimRecept = await tokenContract.claimInitialPoolTokens({ from: recoveryAdmin });
 
     await expectEvent(claimRecept, 'Transfer', {
       from: tokenContract.address,
-      to: owner,
+      to: admin,
       value: '42500000000000000000000000',
     });
 
@@ -58,7 +59,7 @@ contract('AAGToken', (accounts) => {
     // Treasury pool
     errorMessage = '';
     try {
-      await tokenContract.claimTreasuryTokens({ from: owner });
+      await tokenContract.claimTreasuryTokens({ from: recoveryAdmin });
     } catch (e) {
       errorMessage = e.reason;
     }
@@ -67,7 +68,7 @@ contract('AAGToken', (accounts) => {
     // Vesting pool
     errorMessage = '';
     try {
-      await tokenContract.claimVestingTokens({ from: owner });
+      await tokenContract.claimVestingTokens({ from: recoveryAdmin });
     } catch (e) {
       errorMessage = e.reason;
     }
@@ -81,10 +82,10 @@ contract('AAGToken', (accounts) => {
     await time.increaseTo(blockTime.add(time.duration.days(4)));
 
     // claim all tokens
-    await tokenContract.claimTreasuryTokens({ from: owner });
-    await tokenContract.claimVestingTokens({ from: owner });
+    await tokenContract.claimTreasuryTokens({ from: recoveryAdmin });
+    await tokenContract.claimVestingTokens({ from: recoveryAdmin });
 
-    const balance = await tokenContract.balanceOf(owner);
+    const balance = await tokenContract.balanceOf(admin);
     assert.equal(balance.toString(), '1000000000000000000000000000', 'Wrong amount');
   });
 });

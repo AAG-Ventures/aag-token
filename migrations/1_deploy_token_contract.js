@@ -3,27 +3,26 @@ const AAGVestingContract = artifacts.require('AAGVestingContract');
 // const { time } = require('@openzeppelin/test-helpers');
 
 module.exports = async function (deployer, network, accounts) {
-  const owner = accounts[0];
+  const recoveryAdmin = accounts[0];
+  const admin = accounts[1];
+  const timelockPeriod = 3600;
 
-  await deployer.deploy(AAGToken, { from: owner });
-  await deployer.deploy(AAGVestingContract, AAGToken.address, { from: owner });
+  const lossless = accounts[2];
+
+  await deployer.deploy(AAGToken, admin, recoveryAdmin, timelockPeriod, lossless, { from: recoveryAdmin });
+  await deployer.deploy(AAGVestingContract, AAGToken.address, recoveryAdmin, { from: recoveryAdmin });
 
   tokenContract = await AAGToken.deployed()
 
-  await tokenContract.changeVestingContractAddress(
-      owner,
-      { from: owner  },
-  );
-
   // set IDO date
   if(network !== "test"){
-      if(network !== "live"){
+      if(network == "live"){
+        await tokenContract.setTokenBirthday(math.round(new Date("2021-11-01") / 1000))
+      }
+      if(network == "test") {
         let blockTime = await time.latest();
         const birthdayDate = blockTime.add(time.duration.minutes(1))
         await tokenContract.setTokenBirthday(birthdayDate)
-      } else {
-        await tokenContract.setTokenBirthday(math.round(new Date("2021-11-01") / 1000))
       }
   }
-
 };

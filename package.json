@@ -14,7 +14,8 @@
     "solhint": "./node_modules/.bin/solhint -f table contracts/**/*.sol",
     "prettier:solidity": "./node_modules/.bin/prettier --write contracts/**/*.sol",
     "lint": "eslint . --ext .js",
-    "test": "truffle develop --reset --network test"
+    "test": "truffle develop --reset --network test",
+    "coverage": "truffle run coverage --reset --network test"
   },
   "browserslist": [
     ">0.2%",
@@ -34,6 +35,7 @@
     "prettier": "2.4.1",
     "prettier-plugin-solidity": "^1.0.0-beta.18",
     "solhint": "^3.3.6",
-    "solhint-plugin-prettier": "0.0.5"
+    "solhint-plugin-prettier": "0.0.5",
+    "solidity-coverage": "^0.7.17"
   }
 }
