@@ -28,6 +28,7 @@ contract("AAGVestingContract", (accounts) => {
     assert.equal(birthday.toString(), birthdayDate, "Birthday date set correctly");
 
     // Claim tokens
+    await time.increaseTo(blockTime.add(time.duration.days(41)));
     await tokenContract.claimInitialPoolTokens({ from: recoveryAdmin });
 
     blockTime = await time.latest();
@@ -146,9 +147,13 @@ contract("AAGVestingContract", (accounts) => {
     const vestingStart = blockTime.add(time.duration.minutes(1));
     await vestingContract.createVestingSchedule(accounts[3], "500000000000000000000000", vestingStart, 2 * 365, { from: admin });
 
+    // Test available balance then schedule is not started (should be zero)
+    let available3 = await vestingContract.getAvailableWithdrawAmountForAddress(accounts[3], { from: accounts[3] });
+    assert.equal(available3.toString(), "0");
+
     // Check available amount after 180 days
     await time.increaseTo(blockTime.add(time.duration.days(180)));
-    let available3 = await vestingContract.getAvailableWithdrawAmountForAddress(accounts[3], { from: accounts[3] });
+    available3 = await vestingContract.getAvailableWithdrawAmountForAddress(accounts[3], { from: accounts[3] });
     assert.equal(available3.toString().substr(0, 6) === "123287" && available3.toString().length === 24, true, "Incorrect unlocked amount 1");
 
     // Cancel and check information
@@ -230,6 +235,23 @@ contract("AAGVestingContract", (accounts) => {
     assert.equal(balanceInVesting.toString(), "0", "Incorrect amount in vesting contract");
 
     // Total amount should be equal 376712804414003053876760 + 500000000000000000000000
-    assert.equal(balanceInRecoveryAdmin.toString(), "876712804414003053876760", "Incorrect amount in recovery admin's wallet");
+    assert.equal(balanceInRecoveryAdmin.toString().substr(0, 6), "876712", "Incorrect amount in recovery admin's wallet");
+  });
+
+  describe("token balance function", () => {
+    it("No vesting schedules", async () => {
+      const balance = await vestingContract.tokenBalance();
+      assert.equal(balance.toString(), "0", "Empty wallet");
+    });
+
+    it("Active vesting schedule", async () => {
+      const amount = "2500000000000000000000";
+      let blockTime = await time.latest();
+      const vestingStart = blockTime.add(time.duration.minutes(1));
+      await tokenContract.increaseAllowance(vestingContract.address, amount, { from: admin });
+      await vestingContract.createVestingSchedule(accounts[6], amount, vestingStart, 1 * 365, { from: admin });
+      const balance = await vestingContract.tokenBalance();
+      assert.equal(balance.toString(), amount, "Empty wallet");
+    });
   });
 });

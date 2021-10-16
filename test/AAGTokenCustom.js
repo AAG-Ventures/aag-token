@@ -8,20 +8,25 @@ contract("AAG Token custom", (accounts) => {
   const admin = accounts[1];
   let blockTime;
   let tokenContract;
+
   describe("Token unlock and claim functions", () => {
-    it("Should mint a 1 000 000 000 AAG tokens to the admins account", async () => {
+    it("Should mint a 1 000 000 000 AAG tokens in the contract address", async () => {
       tokenContract = await AAGToken.deployed();
       const balanceLocked = await tokenContract.balanceOf(tokenContract.address);
       assert.equal(TOTAL_SUPPLY / balanceLocked, 1, "1 000 000 000 is not in the first account");
     });
 
-    it("Set IDO date (AAG token birthday)", async () => {
-      const blockTime = await time.latest();
-      const birthdayDate = blockTime.add(time.duration.hours(1));
-
+    it("Set birthday date", async () => {
+      blockTime = await time.latest();
+      const birthdayDate = blockTime.add(time.duration.minutes(1));
       await tokenContract.setTokenBirthday(birthdayDate);
       const birthday = await tokenContract.getBirthdayDate();
       assert.equal(birthday.toString(), birthdayDate, "Birthday date set correctly");
+    });
+
+    it("Try to overwrite birthday date", async () => {
+      blockTime = await time.latest();
+      const birthdayDate = blockTime.add(time.duration.minutes(1));
       let errorMessage;
       try {
         await tokenContract.setTokenBirthday(birthdayDate);
@@ -45,7 +50,9 @@ contract("AAG Token custom", (accounts) => {
         value: "42500000000000000000000000",
       });
 
-      await time.increaseTo(blockTime.add(time.duration.days(37)));
+      // Increase time by 39 days
+      await time.increaseTo(blockTime.add(time.duration.days(39)));
+
       // Treasury pool
       errorMessage = "";
       try {
@@ -70,7 +77,7 @@ contract("AAG Token custom", (accounts) => {
 
       await time.increaseTo(blockTime.add(time.duration.days(4)));
 
-      // claim all tokens
+      // Claim all tokens
       await tokenContract.claimTreasuryTokens({ from: recoveryAdmin });
       await tokenContract.claimVestingTokens({ from: recoveryAdmin });
 

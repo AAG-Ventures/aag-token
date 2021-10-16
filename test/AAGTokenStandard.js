@@ -13,18 +13,21 @@ contract("AAG Token standard", (accounts) => {
     tokenContract = await AAGToken.deployed();
     await tokenContract.balanceOf(tokenContract.address);
 
+    // Set birthday
     let blockTime = await time.latest();
     const birthdayDate = blockTime.add(time.duration.hours(1));
     await tokenContract.setTokenBirthday(birthdayDate);
-    await time.increaseTo(blockTime.add(time.duration.days(41)));
 
-    blockTime = await time.latest();
-    await time.increaseTo(blockTime.add(time.duration.days(41)));
-
+    // Move two hours to the future and claim initial pool tokens
+    await time.increaseTo(blockTime.add(time.duration.hours(2)));
     await tokenContract.claimInitialPoolTokens({ from: recoveryAdmin });
+
+    // Move 41 days to the future and claim all other tokens
+    await time.increaseTo(blockTime.add(time.duration.days(41)));
     await tokenContract.claimTreasuryTokens({ from: recoveryAdmin });
     await tokenContract.claimVestingTokens({ from: recoveryAdmin });
 
+    // Test if initial supply is minted and transfered to admin's wallet
     const balance = await tokenContract.balanceOf(admin);
     assert.equal(balance, TOTAL_SUPPLY, "Wrong amount");
   });
