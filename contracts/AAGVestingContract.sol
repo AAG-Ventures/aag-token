@@ -26,7 +26,7 @@ contract AAGVestingContract is ReentrancyGuard, Context {
   // Vested address to its schedule
   mapping(address => Schedule) public vestingSchedule;
 
-  // AAG token contract (Or any other ERC20)
+  // AAG token contract
   IERC20 public token;
   address private admin;
   uint256 public constant ONE_DAY_IN_SECONDS = 1 days;
@@ -37,6 +37,7 @@ contract AAGVestingContract is ReentrancyGuard, Context {
     admin = _admin;
   }
 
+  // Create vesting schedule
   function createVestingSchedule(
     address _beneficiary,
     uint256 _amount,
@@ -71,7 +72,7 @@ contract AAGVestingContract is ReentrancyGuard, Context {
   // Cancel vesting schedule for beneficiary
   function cancelVestingForBeneficiary(address _beneficiary) public onlyAdmin {
     Schedule storage item = vestingSchedule[_beneficiary];
-    require(item.canceledTimestamp == 0, "Can't cancel twice");
+    require(item.canceledTimestamp == 0, "Can not cancel twice");
     require(item.endTimestamp > block.timestamp, "Vesting is already finished");
 
     uint256 availableAmount = this.getAvailableWithdrawAmountForSchedule(item);
@@ -87,7 +88,6 @@ contract AAGVestingContract is ReentrancyGuard, Context {
     // Return unvested tokens to owner
     require(token.transfer(admin, amountToRetrieveToOwner), "Unable to transfer tokens");
 
-    // TODO left over transfer tokens to owner
     emit ScheduleCancelled(_beneficiary, _msgSender(), availableAmount, vestingSchedule[_beneficiary].canceledTimestamp);
   }
 

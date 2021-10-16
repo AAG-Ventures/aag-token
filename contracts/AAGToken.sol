@@ -151,6 +151,7 @@ contract AAGToken is Context, IERC20 {
   }
 
   // AAG unlocked tokens claiming
+  
   function claimInitialPoolTokens() public onlyRecoveryAdmin tokenBirthdayDefined {
     require(initialPoolClaimed == false, "Already claimed");
     initialPoolClaimed = true;

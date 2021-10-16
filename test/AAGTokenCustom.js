@@ -2,7 +2,7 @@ const AAGToken = artifacts.require("AAGToken");
 
 import { expectEvent, time } from "@openzeppelin/test-helpers";
 
-contract("AAGToken custom", (accounts) => {
+contract("AAG Token custom", (accounts) => {
   const TOTAL_SUPPLY = 1000000000e18;
   const recoveryAdmin = accounts[0];
   const admin = accounts[1];
