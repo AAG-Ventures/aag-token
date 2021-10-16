@@ -1,21 +1,22 @@
-require('babel-register');
-require('babel-polyfill');
+/* eslint-disable no-undef */
+require("babel-register");
+require("babel-polyfill");
 
-const { ropsten } = require('./secrets.json');
-const HDWalletProvider = require('@truffle/hdwallet-provider');
+const { ropsten } = require("./secrets.json");
+const HDWalletProvider = require("@truffle/hdwallet-provider");
 
 module.exports = {
-  plugins: ["solidity-coverage"],
+  plugins: ["solidity-coverage", "truffle-contract-size"],
   networks: {
     test: {
-      host: '127.0.0.1',
+      host: "127.0.0.1",
       port: 7545,
-      network_id: '*',
+      network_id: "*",
     },
     development: {
-      host: '127.0.0.1',
+      host: "127.0.0.1",
       port: 7545,
-      network_id: '*',
+      network_id: "*",
     },
     ropsten: {
       provider: function () {
@@ -31,13 +32,13 @@ module.exports = {
   },
   compilers: {
     solc: {
-      version: '^0.8.0',
+      version: "^0.8.0",
       optimizer: {
         enabled: true,
         runs: 200,
       },
     },
   },
-  contracts_directory: './contracts/',
-  contracts_build_directory: './abis/',
+  contracts_directory: "./contracts/",
+  contracts_build_directory: "./abis/",
 };

@@ -1,0 +1,22 @@
+{
+    "env": {
+        "browser": true,
+        "es2021": true,
+        "truffle/globals": true,
+        "mocha": true
+    },
+	"extends": [
+		"eslint:recommended",
+		"plugin:prettier/recommended"
+	],
+	"rules": {
+		"comma-dangle": "off"
+	},
+	"plugins": [
+	  "truffle"
+	],
+    "parserOptions": {
+		"ecmaVersion": 2017,
+        "sourceType": "module"
+    }
+}

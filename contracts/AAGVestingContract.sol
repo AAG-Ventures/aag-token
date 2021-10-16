@@ -28,7 +28,7 @@ contract AAGVestingContract is ReentrancyGuard, Context {
 
   // AAG token contract (Or any other ERC20)
   IERC20 public token;
-  address private admin;  
+  address private admin;
   uint256 public constant ONE_DAY_IN_SECONDS = 1 days;
 
   constructor(IERC20 _token, address _admin) {
@@ -41,22 +41,19 @@ contract AAGVestingContract is ReentrancyGuard, Context {
     address _beneficiary,
     uint256 _amount,
     uint256 _startTimestamp,
-    uint256 _durationInDays,
-    uint256 _cliffDurationInDays
+    uint256 _durationInDays
   ) public {
     require(_beneficiary != address(0), "Beneficiary cannot be empty");
     require(_amount > 0, "Amount cannot be empty");
     require(_durationInDays > 0, "Duration cannot be empty");
-    require(_cliffDurationInDays <= _durationInDays, "Cliff can not be bigger than duration");
     require(_startTimestamp > block.timestamp, "Can not set the date in the past");
     // Ensure one per address
     require(vestingSchedule[_beneficiary].amount == 0, "Schedule already exists");
 
     // Create schedule
     uint256 _durationInSecs = _durationInDays * ONE_DAY_IN_SECONDS;
-    uint256 _cliffDurationInSecs = _cliffDurationInDays * ONE_DAY_IN_SECONDS;
     vestingSchedule[_beneficiary] = Schedule({
-      startTimestamp: _startTimestamp + _cliffDurationInSecs,
+      startTimestamp: _startTimestamp,
       endTimestamp: _startTimestamp + _durationInSecs,
       canceledTimestamp: 0,
       amount: _amount,
@@ -68,14 +65,14 @@ contract AAGVestingContract is ReentrancyGuard, Context {
     emit ScheduleCreated(_beneficiary, _amount, vestingSchedule[_beneficiary].startTimestamp, _durationInDays);
 
     // Transfer tokens in the vesting contract on behalf of the beneficiary
-    require(token.transferFrom(msg.sender, address(this), _amount), "Unable to transfer tokens to vesting contract");
+    require(token.transferFrom(_msgSender(), address(this), _amount), "Unable to transfer tokens to vesting contract");
   }
 
   // Cancel vesting schedule for beneficiary
   function cancelVestingForBeneficiary(address _beneficiary) public onlyAdmin {
     Schedule storage item = vestingSchedule[_beneficiary];
-
-    require(item.endTimestamp > block.timestamp, "No active vesting");
+    require(item.canceledTimestamp == 0, "Can't cancel twice");
+    require(item.endTimestamp > block.timestamp, "Vesting is already finished");
 
     uint256 availableAmount = this.getAvailableWithdrawAmountForSchedule(item);
 
@@ -91,18 +88,18 @@ contract AAGVestingContract is ReentrancyGuard, Context {
     require(token.transfer(admin, amountToRetrieveToOwner), "Unable to transfer tokens");
 
     // TODO left over transfer tokens to owner
-    emit ScheduleCancelled(_beneficiary, msg.sender, availableAmount, vestingSchedule[_beneficiary].canceledTimestamp);
+    emit ScheduleCancelled(_beneficiary, _msgSender(), availableAmount, vestingSchedule[_beneficiary].canceledTimestamp);
   }
 
   // Emergency withdrawal (Whole balance)
   function emergencyWithdrawAllTokens() public onlyAdmin {
     uint256 balance = token.balanceOf(address(this));
     // Return all tokens to the owner
-    require(token.transfer(msg.sender, balance), "Unable to transfer tokens");
+    require(token.transfer(admin, balance), "Unable to transfer tokens");
   }
 
   function withdraw() external nonReentrant {
-    Schedule memory schedule = vestingSchedule[msg.sender];
+    Schedule memory schedule = vestingSchedule[_msgSender()];
     require(schedule.amount > 0, "There is no schedule currently in flight");
 
     // available right now
@@ -110,15 +107,15 @@ contract AAGVestingContract is ReentrancyGuard, Context {
     require(amount > 0, "Nothing to withdraw");
 
     // Update last drawn to now
-    vestingSchedule[msg.sender].lastDrawnAt = block.timestamp;
+    vestingSchedule[_msgSender()].lastDrawnAt = block.timestamp;
 
     // Increase total drawn amount
-    vestingSchedule[msg.sender].totalDrawn = schedule.totalDrawn + amount;
+    vestingSchedule[_msgSender()].totalDrawn = schedule.totalDrawn + amount;
 
     // Issue tokens to beneficiary
-    require(token.transfer(msg.sender, amount), "Unable to transfer tokens");
+    require(token.transfer(_msgSender(), amount), "Unable to transfer tokens");
 
-    emit Withdraw(msg.sender, amount, block.timestamp);
+    emit Withdraw(_msgSender(), amount, block.timestamp);
   }
 
   // Accessors
@@ -180,11 +177,10 @@ contract AAGVestingContract is ReentrancyGuard, Context {
     return timePassedFromVestingStart * _schedule.withdrawRate - _schedule.totalDrawn;
   }
 
-
   // AAG Access modifier
 
   modifier onlyAdmin() {
-      require(_msgSender() == admin, "Permission denied");
-      _;
+    require(_msgSender() == admin, "Permission denied");
+    _;
   }
 }

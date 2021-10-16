@@ -1,8 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "./IERC20.sol";
+
+abstract contract Context {
+  function _msgSender() internal view virtual returns (address) {
+    return msg.sender;
+  }
+
+  function _msgData() internal view virtual returns (bytes calldata) {
+    this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
+    return msg.data;
+  }
+}
 
 interface ILosslessController {
   function beforeTransfer(
@@ -141,10 +151,8 @@ contract AAGToken is Context, IERC20 {
   }
 
   // AAG unlocked tokens claiming
-
   function claimInitialPoolTokens() public onlyRecoveryAdmin tokenBirthdayDefined {
     require(initialPoolClaimed == false, "Already claimed");
-    require(tokenBirthDate < block.timestamp, "Can't claim tokens before the IDO");
     initialPoolClaimed = true;
     _transfer(address(this), admin, LIQUIDITY_POOL_TOKENS + STRATEGIC_BACKERS_POOL + PUBLIC_TOKENS);
   }
