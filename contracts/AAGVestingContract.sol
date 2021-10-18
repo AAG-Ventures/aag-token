@@ -2,9 +2,8 @@
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/utils/Context.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "./IERC20.sol";
 
 contract AAGVestingContract is ReentrancyGuard, Context {
   event ScheduleCreated(address indexed _beneficiary, uint256 indexed _amount, uint256 indexed _startTimestamp, uint256 _duration);

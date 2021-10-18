@@ -1,7 +1,6 @@
 .vscode/settings.json
 node_modules
 build
-abis
 bckp
 secrets.json
 coverage
