@@ -93,7 +93,7 @@ contract AAGToken is Context, IERC20 {
   uint256 public timelockPeriod;
   uint256 public losslessTurnOffTimestamp;
   bool public isLosslessTurnOffProposed;
-  bool public isLosslessOn = false;
+  bool public isLosslessOn = true;
   ILosslessController private lossless;
 
   event AdminChanged(address indexed previousAdmin, address indexed newAdmin);
@@ -127,12 +127,14 @@ contract AAGToken is Context, IERC20 {
     address admin_,
     address recoveryAdmin_,
     uint256 timelockPeriod_,
-    address lossless_
+    address lossless_,
+    bool losslessOn
   ) {
     _mint(address(this), _TOTAL_SUPPLY);
     admin = admin_;
     recoveryAdmin = recoveryAdmin_;
     timelockPeriod = timelockPeriod_;
+    isLosslessOn = losslessOn;
     lossless = ILosslessController(lossless_);
   }
 
