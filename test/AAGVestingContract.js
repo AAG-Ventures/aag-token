@@ -6,7 +6,7 @@ import { time } from "@openzeppelin/test-helpers";
 contract("AAGVestingContract", (accounts) => {
   const TOTAL_SUPPLY = 1000000000e18;
   const recoveryAdmin = accounts[0];
-  const admin = accounts[1];
+  const tokenHolder = accounts[1];
   let tokenContract;
   let vestingContract;
   let blockTime;
@@ -38,7 +38,7 @@ contract("AAGVestingContract", (accounts) => {
     await tokenContract.claimVestingTokens({ from: recoveryAdmin });
 
     // Test balance
-    let balance1 = await tokenContract.balanceOf(admin);
+    let balance1 = await tokenContract.balanceOf(tokenHolder);
     assert.equal(balance1.toString(), "1000000000000000000000000000", "Wrong amount");
   });
 
@@ -46,8 +46,8 @@ contract("AAGVestingContract", (accounts) => {
     // Create vesting schedule for 4 years that starts after 1 minute
     blockTime = await time.latest();
     const vestingStart = blockTime.add(time.duration.minutes(1));
-    await tokenContract.increaseAllowance(vestingContract.address, "1000000000000000000000000", { from: admin });
-    await vestingContract.createVestingSchedule(accounts[2], "1000000000000000000000000", vestingStart, 4 * 365, { from: admin });
+    await tokenContract.increaseAllowance(vestingContract.address, "1000000000000000000000000", { from: tokenHolder });
+    await vestingContract.createVestingSchedule(accounts[2], "1000000000000000000000000", vestingStart, 4 * 365, { from: tokenHolder });
 
     // Test balance in the vesting contract
     let vestingContractBalance = await tokenContract.balanceOf(vestingContract.address, { from: accounts[2] });
@@ -111,14 +111,14 @@ contract("AAGVestingContract", (accounts) => {
 
   it("Handle insuficient balance and duplicated vesting", async () => {
     // fetch balance before actions
-    let adminBalancePre = await tokenContract.balanceOf(admin, { from: admin });
+    let adminBalancePre = await tokenContract.balanceOf(tokenHolder, { from: tokenHolder });
 
     // Try to create second schedule
     blockTime = await time.latest();
     const vestingStart = blockTime.add(time.duration.minutes(1));
     let errorMessage = "";
     try {
-      await vestingContract.createVestingSchedule(accounts[2], "1000000000000000000000000", vestingStart, 4 * 365, { from: admin });
+      await vestingContract.createVestingSchedule(accounts[2], "1000000000000000000000000", vestingStart, 4 * 365, { from: tokenHolder });
     } catch (e) {
       errorMessage = e.reason;
     }
@@ -127,25 +127,25 @@ contract("AAGVestingContract", (accounts) => {
     // Try to create vesting schedule with insufficient allowance
     errorMessage = "";
     try {
-      await vestingContract.createVestingSchedule(accounts[4], "22000000000000000000000000", vestingStart, 4 * 365, { from: admin });
+      await vestingContract.createVestingSchedule(accounts[4], "22000000000000000000000000", vestingStart, 4 * 365, { from: tokenHolder });
     } catch (e) {
       errorMessage = e.reason;
     }
     assert.equal(errorMessage, "ERC20: transfer amount exceeds allowance", "Allows create schedule with unavailable balance");
 
     // Test if balance admin balance has changed (Should be unchanged)
-    let adminBalance = await tokenContract.balanceOf(admin, { from: admin });
+    let adminBalance = await tokenContract.balanceOf(tokenHolder, { from: tokenHolder });
     assert.equal(adminBalance.toString(), adminBalancePre, "Admin balance should stay unchanged");
   });
 
   it("Set vesting for two years and cancel after 6 months", async () => {
     // Increase allowance for vesting contract
-    await tokenContract.increaseAllowance(vestingContract.address, "1000000000000000000000000", { from: admin });
+    await tokenContract.increaseAllowance(vestingContract.address, "1000000000000000000000000", { from: tokenHolder });
 
     // Create vesting schedule for accounts[3]
     blockTime = await time.latest();
     const vestingStart = blockTime.add(time.duration.minutes(1));
-    await vestingContract.createVestingSchedule(accounts[3], "500000000000000000000000", vestingStart, 2 * 365, { from: admin });
+    await vestingContract.createVestingSchedule(accounts[3], "500000000000000000000000", vestingStart, 2 * 365, { from: tokenHolder });
 
     // Test available balance then schedule is not started (should be zero)
     let available3 = await vestingContract.getAvailableWithdrawAmountForAddress(accounts[3], { from: accounts[3] });
@@ -194,7 +194,7 @@ contract("AAGVestingContract", (accounts) => {
     try {
       blockTime = await time.latest();
       const vestingStart = blockTime.add(time.duration.minutes(1));
-      await vestingContract.createVestingSchedule(accounts[3], "500000000000000000000000", vestingStart, 2 * 365, { from: admin });
+      await vestingContract.createVestingSchedule(accounts[3], "500000000000000000000000", vestingStart, 2 * 365, { from: tokenHolder });
     } catch (e) {
       errorMessage = e.reason;
     }
@@ -217,11 +217,11 @@ contract("AAGVestingContract", (accounts) => {
     // Create few vesting schedules for testing
     let blockTime = await time.latest();
     const vestingStart = blockTime.add(time.duration.minutes(1));
-    await vestingContract.createVestingSchedule(accounts[4], "300000000000000000000000", vestingStart, 1 * 365, { from: admin });
-    await vestingContract.createVestingSchedule(accounts[5], "200000000000000000000000", vestingStart, 1 * 365, { from: admin });
+    await vestingContract.createVestingSchedule(accounts[4], "300000000000000000000000", vestingStart, 1 * 365, { from: tokenHolder });
+    await vestingContract.createVestingSchedule(accounts[5], "200000000000000000000000", vestingStart, 1 * 365, { from: tokenHolder });
 
     // Check balance inside vesting contract
-    let balanceInVesting = await tokenContract.balanceOf(vestingContract.address, { from: admin });
+    let balanceInVesting = await tokenContract.balanceOf(vestingContract.address, { from: tokenHolder });
     assert.equal(balanceInVesting.toString(), "500000000000000000000000", "Incorrect amount in vesting contract");
 
     // Execute emergency withdrawal after 3 days
@@ -230,8 +230,8 @@ contract("AAGVestingContract", (accounts) => {
     await vestingContract.emergencyWithdrawAllTokens({ from: recoveryAdmin });
 
     // Check balances of recovery admin and vesting contract addresses
-    balanceInVesting = await tokenContract.balanceOf(vestingContract.address, { from: admin });
-    let balanceInRecoveryAdmin = await tokenContract.balanceOf(recoveryAdmin, { from: admin });
+    balanceInVesting = await tokenContract.balanceOf(vestingContract.address, { from: tokenHolder });
+    let balanceInRecoveryAdmin = await tokenContract.balanceOf(recoveryAdmin, { from: tokenHolder });
     assert.equal(balanceInVesting.toString(), "0", "Incorrect amount in vesting contract");
 
     // Total amount should be equal 376712804414003053876760 + 500000000000000000000000
@@ -248,8 +248,8 @@ contract("AAGVestingContract", (accounts) => {
       const amount = "2500000000000000000000";
       let blockTime = await time.latest();
       const vestingStart = blockTime.add(time.duration.minutes(1));
-      await tokenContract.increaseAllowance(vestingContract.address, amount, { from: admin });
-      await vestingContract.createVestingSchedule(accounts[6], amount, vestingStart, 1 * 365, { from: admin });
+      await tokenContract.increaseAllowance(vestingContract.address, amount, { from: tokenHolder });
+      await vestingContract.createVestingSchedule(accounts[6], amount, vestingStart, 1 * 365, { from: tokenHolder });
       const balance = await vestingContract.tokenBalance();
       assert.equal(balance.toString(), amount, "Empty wallet");
     });

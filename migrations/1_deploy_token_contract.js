@@ -20,7 +20,7 @@ module.exports = async function (deployer, network, accounts) {
   }
 
   await deployer.deploy(AAGToken, admin, recoveryAdmin, timelockPeriod, lossless, losslessOn, { from: recoveryAdmin });
-  await deployer.deploy(AAGVestingContract, AAGToken.address, recoveryAdmin, { from: recoveryAdmin });
+  await deployer.deploy(AAGVestingContract, AAGToken.address, { from: recoveryAdmin });
 
   let tokenContract = await AAGToken.deployed();
 

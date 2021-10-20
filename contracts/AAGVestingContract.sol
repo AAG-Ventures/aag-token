@@ -4,8 +4,9 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract AAGVestingContract is ReentrancyGuard, Context {
+contract AAGVestingContract is ReentrancyGuard, Context, Ownable {
   event ScheduleCreated(address indexed _beneficiary, uint256 indexed _amount, uint256 indexed _startTimestamp, uint256 _duration);
 
   event ScheduleCancelled(address indexed _beneficiary, address indexed _cancelledBy, uint256 _remainingBalance, uint256 _canceledTimestamp);
@@ -23,17 +24,14 @@ contract AAGVestingContract is ReentrancyGuard, Context {
   }
 
   // Vested address to its schedule
-  mapping(address => Schedule) public vestingSchedule;
+  mapping(address => Schedule) private vestingSchedule;
 
   // AAG token contract
   IERC20 public token;
-  address private admin;
-  uint256 public constant ONE_DAY_IN_SECONDS = 1 days;
+  uint256 private constant ONE_DAY_IN_SECONDS = 1 days;
 
-  constructor(IERC20 _token, address _admin) {
-    require(address(_token) != address(0));
+  constructor(IERC20 _token) {
     token = _token;
-    admin = _admin;
   }
 
   // Create vesting schedule
@@ -69,12 +67,12 @@ contract AAGVestingContract is ReentrancyGuard, Context {
   }
 
   // Cancel vesting schedule for beneficiary
-  function cancelVestingForBeneficiary(address _beneficiary) public onlyAdmin {
+  function cancelVestingForBeneficiary(address _beneficiary) public onlyOwner {
     Schedule storage item = vestingSchedule[_beneficiary];
     require(item.canceledTimestamp == 0, "Can not cancel twice");
     require(item.endTimestamp > block.timestamp, "Vesting is already finished");
 
-    uint256 availableAmount = this.getAvailableWithdrawAmountForSchedule(item);
+    uint256 availableAmount = getAvailableWithdrawAmountForSchedule(item);
 
     item.canceledTimestamp = block.timestamp;
 
@@ -85,16 +83,16 @@ contract AAGVestingContract is ReentrancyGuard, Context {
     item.amount = finalAmountForBeneficiary;
 
     // Return unvested tokens to owner
-    require(token.transfer(admin, amountToRetrieveToOwner), "Unable to transfer tokens");
+    require(token.transfer(owner(), amountToRetrieveToOwner), "Unable to transfer tokens");
 
     emit ScheduleCancelled(_beneficiary, _msgSender(), availableAmount, vestingSchedule[_beneficiary].canceledTimestamp);
   }
 
   // Emergency withdrawal (Whole balance)
-  function emergencyWithdrawAllTokens() public onlyAdmin {
+  function emergencyWithdrawAllTokens() public onlyOwner {
     uint256 balance = token.balanceOf(address(this));
     // Return all tokens to the owner
-    require(token.transfer(admin, balance), "Unable to transfer tokens");
+    require(token.transfer(owner(), balance), "Unable to transfer tokens");
   }
 
   function withdraw() external nonReentrant {
@@ -102,7 +100,7 @@ contract AAGVestingContract is ReentrancyGuard, Context {
     require(schedule.amount > 0, "There is no schedule currently in flight");
 
     // available right now
-    uint256 amount = this.getAvailableWithdrawAmountForSchedule(schedule);
+    uint256 amount = getAvailableWithdrawAmountForSchedule(schedule);
     require(amount > 0, "Nothing to withdraw");
 
     // Update last drawn to now
@@ -151,10 +149,10 @@ contract AAGVestingContract is ReentrancyGuard, Context {
 
   function getAvailableWithdrawAmountForAddress(address _beneficiary) external view returns (uint256 _amount) {
     Schedule memory schedule = vestingSchedule[_beneficiary];
-    return this.getAvailableWithdrawAmountForSchedule(schedule);
+    return getAvailableWithdrawAmountForSchedule(schedule);
   }
 
-  function getAvailableWithdrawAmountForSchedule(Schedule memory _schedule) external view returns (uint256 _amount) {
+  function getAvailableWithdrawAmountForSchedule(Schedule memory _schedule) internal view returns (uint256 _amount) {
     // Vesting haven't started
     if (block.timestamp <= _schedule.startTimestamp) {
       return 0;
@@ -174,12 +172,5 @@ contract AAGVestingContract is ReentrancyGuard, Context {
     // Active
     uint256 timePassedFromVestingStart = block.timestamp - _schedule.startTimestamp;
     return timePassedFromVestingStart * _schedule.withdrawRate - _schedule.totalDrawn;
-  }
-
-  // AAG Access modifier
-
-  modifier onlyAdmin() {
-    require(_msgSender() == admin, "Permission denied");
-    _;
   }
 }
