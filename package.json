@@ -4,12 +4,12 @@
   "description": "AAG token infrastructure",
   "author": "marius@aag.ventures",
   "dependencies": {
-    "@openzeppelin/contracts": "^4.3.2",
-    "@truffle/hdwallet-provider": "^1.5.0",
+    "@openzeppelin/contracts": "^4.3.3",
+    "@truffle/hdwallet-provider": "^1.6.0",
     "babel-polyfill": "^6.26.0",
     "babel-register": "^6.26.0",
     "eslint-plugin-jest": "^25.2.1",
-    "truffle": "5.1.39",
+    "truffle": "^5.4.19",
     "truffle-contract-size": "^2.0.1"
   },
   "scripts": {

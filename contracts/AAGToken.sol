@@ -72,8 +72,8 @@ contract AAGToken is Context, IERC20 {
   mapping(address => mapping(address => uint256)) private _allowances;
 
   uint256 private _totalSupply;
-  string private _name = "AAG";
-  string private _symbol = "AAG";
+  string private constant NAME = "AAG";
+  string private constant SYMBOL = "AAG";
 
   address public recoveryAdmin;
   address private recoveryAdminCanditate;
@@ -97,7 +97,7 @@ contract AAGToken is Context, IERC20 {
   uint256 public tokenBirthDate = 0;
 
   uint256 private constant STRATEGIC_BACKERS_POOL = 5000000e18; // Strategic Backers 0.5%,
-  uint256 private constant LIQUIDITY_POOL_TOKENS = 10000000e18; // Liquidity 1%
+  uint256 private constant LIQUIDITY_POOL_TOKENS = 30000000e18; // Liquidity 3%
   uint256 private constant PUBLIC_TOKENS = 27500000e18; // 2.75% / Public IDO
   bool private initialPoolClaimed = false;
 
@@ -108,7 +108,7 @@ contract AAGToken is Context, IERC20 {
   uint256 private constant TEAM_TOKENS = 247500000e18; // 24.75% 40-day lockup. Daily vesting over 4 years
   uint256 private constant ADVISORS_TOKENS = 30000000e18; // 3% 40-day lockup. Daily vesting over 4 years
   uint256 private constant PRIVATE_INVESTORS_TOKENS = 100000000e18; // 10% 40-day lockup. Daily vesting over 2 years
-  uint256 private constant COMMUNITY_ECOSYSTEM_TOKEN = 430000000e18; // 43% / Community & Ecosystem / Daily vesting over 4 years
+  uint256 private constant COMMUNITY_ECOSYSTEM_TOKEN = 410000000e18; // 41% / Community & Ecosystem / Daily vesting over 4 years
 
   bool private vestingTokensClaimed = false;
 
@@ -142,7 +142,7 @@ contract AAGToken is Context, IERC20 {
   }
 
   // AAG unlocked tokens claiming
-  
+
   function claimInitialPoolTokens() public onlyRecoveryAdmin tokenBirthdayDefined {
     require(initialPoolClaimed == false, "Already claimed");
     initialPoolClaimed = true;
@@ -289,11 +289,11 @@ contract AAGToken is Context, IERC20 {
   // --- ERC20 methods ---
 
   function name() public view virtual returns (string memory) {
-    return _name;
+    return NAME;
   }
 
   function symbol() public view virtual returns (string memory) {
-    return _symbol;
+    return SYMBOL;
   }
 
   function decimals() public view virtual returns (uint8) {

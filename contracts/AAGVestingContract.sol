@@ -40,7 +40,7 @@ contract AAGVestingContract is ReentrancyGuard, Context, Ownable {
     uint256 _amount,
     uint256 _startTimestamp,
     uint256 _durationInDays
-  ) public {
+  ) external onlyOwner {
     require(_beneficiary != address(0), "Beneficiary cannot be empty");
     require(_amount > 0, "Amount cannot be empty");
     require(_durationInDays > 0, "Duration cannot be empty");
@@ -67,7 +67,7 @@ contract AAGVestingContract is ReentrancyGuard, Context, Ownable {
   }
 
   // Cancel vesting schedule for beneficiary
-  function cancelVestingForBeneficiary(address _beneficiary) public onlyOwner {
+  function cancelVestingForBeneficiary(address _beneficiary) external onlyOwner {
     Schedule storage item = vestingSchedule[_beneficiary];
     require(item.canceledTimestamp == 0, "Can not cancel twice");
     require(item.endTimestamp > block.timestamp, "Vesting is already finished");
@@ -89,7 +89,7 @@ contract AAGVestingContract is ReentrancyGuard, Context, Ownable {
   }
 
   // Emergency withdrawal (Whole balance)
-  function emergencyWithdrawAllTokens() public onlyOwner {
+  function emergencyWithdrawAllTokens() external onlyOwner {
     uint256 balance = token.balanceOf(address(this));
     // Return all tokens to the owner
     require(token.transfer(owner(), balance), "Unable to transfer tokens");

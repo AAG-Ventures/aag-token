@@ -4,8 +4,8 @@ import { expectEvent, time } from "@openzeppelin/test-helpers";
 
 contract("AAG Token custom", (accounts) => {
   const TOTAL_SUPPLY = 1000000000e18;
-  const recoveryAdmin = accounts[0];
-  const admin = accounts[1];
+  const recoveryAdmin = accounts[2];
+  const admin = accounts[3];
   let blockTime;
   let tokenContract;
 
@@ -19,7 +19,7 @@ contract("AAG Token custom", (accounts) => {
     it("Set birthday date", async () => {
       blockTime = await time.latest();
       const birthdayDate = blockTime.add(time.duration.minutes(1));
-      await tokenContract.setTokenBirthday(birthdayDate);
+      await tokenContract.setTokenBirthday(birthdayDate, { from: recoveryAdmin });
       const birthday = await tokenContract.getBirthdayDate();
       assert.equal(birthday.toString(), birthdayDate, "Birthday date set correctly");
     });
@@ -29,7 +29,7 @@ contract("AAG Token custom", (accounts) => {
       const birthdayDate = blockTime.add(time.duration.minutes(1));
       let errorMessage;
       try {
-        await tokenContract.setTokenBirthday(birthdayDate);
+        await tokenContract.setTokenBirthday(birthdayDate, { from: recoveryAdmin });
       } catch (e) {
         errorMessage = e.reason;
       }
@@ -47,7 +47,7 @@ contract("AAG Token custom", (accounts) => {
       await expectEvent(claimRecept, "Transfer", {
         from: tokenContract.address,
         to: admin,
-        value: "42500000000000000000000000",
+        value: "62500000000000000000000000",
       });
 
       // Increase time by 39 days

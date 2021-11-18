@@ -5,8 +5,8 @@ const { ZERO_ADDRESS } = constants;
 
 contract("AAG Token standard", (accounts) => {
   const TOTAL_SUPPLY = 1000000000e18;
-  const recoveryAdmin = accounts[0];
-  const admin = accounts[1];
+  const recoveryAdmin = accounts[2];
+  const admin = accounts[3];
   let tokenContract;
 
   it("Set up and claim tokens", async () => {
@@ -16,7 +16,7 @@ contract("AAG Token standard", (accounts) => {
     // Set birthday
     let blockTime = await time.latest();
     const birthdayDate = blockTime.add(time.duration.hours(1));
-    await tokenContract.setTokenBirthday(birthdayDate);
+    await tokenContract.setTokenBirthday(birthdayDate, { from: recoveryAdmin });
 
     // Move two hours to the future and claim initial pool tokens
     await time.increaseTo(blockTime.add(time.duration.hours(2)));
@@ -69,7 +69,7 @@ contract("AAG Token standard", (accounts) => {
         it("when the sender does not have enough balance", async () => {
           let error;
           try {
-            await tokenContract.transfer(accounts[3], "100000000", { from: accounts[2] });
+            await tokenContract.transfer(accounts[6], "100000000", { from: recoveryAdmin });
           } catch (e) {
             error = e.reason;
           }
@@ -78,32 +78,32 @@ contract("AAG Token standard", (accounts) => {
 
         it("emits a transfer event", async () => {
           let adminBalance = await tokenContract.balanceOf(admin);
-          const receipt = await tokenContract.transfer(accounts[2], "300000000000", { from: admin });
+          const receipt = await tokenContract.transfer(accounts[5], "300000000000", { from: admin });
 
           await expectEvent(receipt, "Transfer", {
             from: admin,
-            to: accounts[2],
+            to: accounts[5],
             value: "300000000000",
           });
 
-          let balanceOf2 = await tokenContract.balanceOf(accounts[2]);
+          let balanceOf2 = await tokenContract.balanceOf(accounts[5]);
           assert.equal(balanceOf2.toString(), "300000000000", "Address received tokens");
 
           adminBalance = await tokenContract.balanceOf(admin);
           assert.equal(adminBalance.toString(), "999999999999999700000000000", "Tokens were excluded from the balance");
 
-          const receipt2 = await tokenContract.transfer(accounts[3], "300", { from: accounts[2] });
+          const receipt2 = await tokenContract.transfer(accounts[6], "300", { from: accounts[5] });
 
           await expectEvent(receipt2, "Transfer", {
-            from: accounts[2],
-            to: accounts[3],
+            from: accounts[5],
+            to: accounts[6],
             value: "300",
           });
 
-          balanceOf2 = await tokenContract.balanceOf(accounts[2]);
+          balanceOf2 = await tokenContract.balanceOf(accounts[5]);
           assert.equal(balanceOf2.toString(), "299999999700", "Address received tokens");
 
-          let balanceOf3 = await tokenContract.balanceOf(accounts[3]);
+          let balanceOf3 = await tokenContract.balanceOf(accounts[6]);
           assert.equal(balanceOf3.toString(), "300", "Tokens were excluded from the balance");
         });
       });
@@ -138,7 +138,7 @@ contract("AAG Token standard", (accounts) => {
         it("executing transfer from without allowance", async () => {
           let error;
           try {
-            await tokenContract.transferFrom(accounts[2], admin, "100000000");
+            await tokenContract.transferFrom(accounts[5], admin, "100000000");
           } catch (e) {
             error = e.reason;
           }
@@ -155,22 +155,22 @@ contract("AAG Token standard", (accounts) => {
           assert.equal(error, "ERC20: transfer amount exceeds balance", "Allow transfer from without allowance");
         });
 
-        it("executing transfer from with insuficient balance", async () => {
+        it("executing transfer from correctly", async () => {
           await tokenContract.transfer(accounts[4], "100000000", { from: admin });
-          await tokenContract.transferFrom(accounts[4], accounts[5], "100000000", { from: admin });
-          const balance = await tokenContract.balanceOf(accounts[5]);
+          await tokenContract.transferFrom(accounts[4], accounts[7], "100000000", { from: admin });
+          const balance = await tokenContract.balanceOf(accounts[7]);
           assert.equal(balance.toString(), "100000000", "Transfer from executed incorrectly");
         });
 
-        it("approve and execute transaction", async () => {
+        it("approve and execute transaction (admin -> account[7] -> account[8]", async () => {
           const amount = "200000000";
-          await tokenContract.approve(accounts[5], admin, { from: admin });
+          await tokenContract.approve(accounts[7], admin, { from: admin });
 
           // execute one transaction
-          const reciept = await tokenContract.transferFrom(admin, accounts[6], amount, { from: accounts[5] });
+          const reciept = await tokenContract.transferFrom(admin, accounts[8], amount, { from: accounts[7] });
           await expectEvent(reciept, "Transfer", {
             from: admin,
-            to: accounts[6],
+            to: accounts[8],
             value: amount,
           });
         });
