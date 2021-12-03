@@ -93,25 +93,8 @@ contract AAGToken is Context, IERC20 {
   event LosslessTurnedOff();
   event LosslessTurnedOn();
 
-  // AAG Token vesting schedule
   uint256 private constant _TOTAL_SUPPLY = 1000000000e18; // Initial supply 1 000 000 000
-  uint256 public tokenBirthDate = 0;
-
-  uint256 private constant STRATEGIC_BACKERS_POOL = 5000000e18; // Strategic Backers 0.5%,
-  uint256 private constant LIQUIDITY_POOL_TOKENS = 30000000e18; // Liquidity 3%
-  uint256 private constant PUBLIC_TOKENS = 27500000e18; // 2.75% / Public IDO
   bool private initialPoolClaimed = false;
-
-  uint256 private constant TREASURY_TOKENS = 150000000e18; // 15% / Treasury / 40-day lockup
-  bool private treasuryTokensClaimed = false;
-
-  address private vestingContractAddress;
-  uint256 private constant TEAM_TOKENS = 247500000e18; // 24.75% 40-day lockup. Daily vesting over 4 years
-  uint256 private constant ADVISORS_TOKENS = 30000000e18; // 3% 40-day lockup. Daily vesting over 4 years
-  uint256 private constant PRIVATE_INVESTORS_TOKENS = 100000000e18; // 10% 40-day lockup. Daily vesting over 2 years
-  uint256 private constant COMMUNITY_ECOSYSTEM_TOKEN = 410000000e18; // 41% / Community & Ecosystem / Daily vesting over 4 years
-
-  bool private vestingTokensClaimed = false;
 
   constructor(
     address admin_,
@@ -128,51 +111,12 @@ contract AAGToken is Context, IERC20 {
     lossless = ILosslessController(lossless_);
   }
 
-  // --- AAG Token functions ---
-
-  // AAG token unlock initialization
-
-  function setTokenBirthday(uint256 _tokenBirthDate) public onlyRecoveryAdmin {
-    require(tokenBirthDate == 0, "Already set");
-    require(_tokenBirthDate > block.timestamp, "Can't be a date in the past");
-    tokenBirthDate = _tokenBirthDate;
-  }
-
-  function getBirthdayDate() public view virtual returns (uint256) {
-    return tokenBirthDate;
-  }
-
   // AAG unlocked tokens claiming
 
-  function claimInitialPoolTokens() public onlyRecoveryAdmin tokenBirthdayDefined {
+  function claimTokens() public onlyRecoveryAdmin {
     require(initialPoolClaimed == false, "Already claimed");
     initialPoolClaimed = true;
-    _transfer(address(this), admin, LIQUIDITY_POOL_TOKENS + STRATEGIC_BACKERS_POOL + PUBLIC_TOKENS);
-  }
-
-  function claimTreasuryTokens() public onlyRecoveryAdmin lockUpFinished tokenBirthdayDefined {
-    require(treasuryTokensClaimed == false, "Already claimed");
-    treasuryTokensClaimed = true;
-    _transfer(address(this), admin, TREASURY_TOKENS);
-  }
-
-  function claimVestingTokens() public onlyRecoveryAdmin lockUpFinished tokenBirthdayDefined {
-    require(vestingTokensClaimed == false, "Already claimed");
-    vestingTokensClaimed = true;
-    _transfer(address(this), admin, TEAM_TOKENS + ADVISORS_TOKENS + PRIVATE_INVESTORS_TOKENS + COMMUNITY_ECOSYSTEM_TOKEN);
-  }
-
-  // AAG vesting modifiers modifiers
-
-  modifier tokenBirthdayDefined() {
-    require(tokenBirthDate != 0, "Initialization have not started");
-    _;
-  }
-
-  modifier lockUpFinished() {
-    require(tokenBirthDate != 0, "Initialization have not started");
-    require(tokenBirthDate + 40 days < block.timestamp, "Still locked");
-    _;
+    _transfer(address(this), admin, _TOTAL_SUPPLY);
   }
 
   // --- LOSSLESS modifiers ---

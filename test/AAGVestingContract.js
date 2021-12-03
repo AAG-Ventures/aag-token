@@ -22,24 +22,18 @@ contract("AAGVestingContract", (accounts) => {
     assert.equal(TOTAL_SUPPLY / balanceLocked, 1, "1 000 000 000 is not in the first account");
   });
 
-  it("Set IDO date and claim tokens", async () => {
-    // Set token birthday
-    blockTime = await time.latest();
-    const birthdayDate = blockTime.add(time.duration.minutes(1));
-    await tokenContract.setTokenBirthday(birthdayDate, { from: recoveryAdmin });
-    const birthday = await tokenContract.getBirthdayDate();
-    assert.equal(birthday.toString(), birthdayDate, "Birthday date set correctly");
+  it("Claim tokens", async () => {
+    tokenContract = await AAGToken.deployed();
+    await tokenContract.balanceOf(tokenContract.address);
+    await tokenContract.claimTokens({ from: recoveryAdmin });
 
-    // Claim tokens
-    await time.increaseTo(blockTime.add(time.duration.days(41)));
-    await tokenContract.claimInitialPoolTokens({ from: recoveryAdmin });
+    // Test if initial supply is minted and transfered to admin's wallet
+    const balance = await tokenContract.balanceOf(admin);
+    assert.equal(balance, TOTAL_SUPPLY, "Wrong amount");
+  });
 
-    blockTime = await time.latest();
-    await time.increaseTo(blockTime.add(time.duration.days(41)));
-
-    await tokenContract.claimTreasuryTokens({ from: recoveryAdmin });
-    await tokenContract.claimVestingTokens({ from: recoveryAdmin });
-
+  it("Transfer tokens to vesting wallet owner", async () => {
+    tokenContract = await AAGToken.deployed();
     // Test balance
     await tokenContract.transfer(vestingWalletOwner, "1000000000000000000000000000", { from: admin });
     let balance1 = await tokenContract.balanceOf(vestingWalletOwner);

@@ -1,5 +1,5 @@
 const AAGToken = artifacts.require("AAGToken");
-import { expectEvent, time, constants } from "@openzeppelin/test-helpers";
+import { expectEvent, constants } from "@openzeppelin/test-helpers";
 
 const { ZERO_ADDRESS } = constants;
 
@@ -12,20 +12,7 @@ contract("AAG Token standard", (accounts) => {
   it("Set up and claim tokens", async () => {
     tokenContract = await AAGToken.deployed();
     await tokenContract.balanceOf(tokenContract.address);
-
-    // Set birthday
-    let blockTime = await time.latest();
-    const birthdayDate = blockTime.add(time.duration.hours(1));
-    await tokenContract.setTokenBirthday(birthdayDate, { from: recoveryAdmin });
-
-    // Move two hours to the future and claim initial pool tokens
-    await time.increaseTo(blockTime.add(time.duration.hours(2)));
-    await tokenContract.claimInitialPoolTokens({ from: recoveryAdmin });
-
-    // Move 41 days to the future and claim all other tokens
-    await time.increaseTo(blockTime.add(time.duration.days(41)));
-    await tokenContract.claimTreasuryTokens({ from: recoveryAdmin });
-    await tokenContract.claimVestingTokens({ from: recoveryAdmin });
+    await tokenContract.claimTokens({ from: recoveryAdmin });
 
     // Test if initial supply is minted and transfered to admin's wallet
     const balance = await tokenContract.balanceOf(admin);
