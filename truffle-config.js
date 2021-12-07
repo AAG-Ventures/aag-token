@@ -2,11 +2,11 @@
 require("babel-register");
 require("babel-polyfill");
 
-const { ropsten, rinkeby } = require("./secrets.json");
+const { ropsten, rinkeby, etherscan: ethscanApiKey, mainnet } = require("./secrets.json");
 const HDWalletProvider = require("@truffle/hdwallet-provider");
 
 module.exports = {
-  plugins: ["solidity-coverage", "truffle-contract-size"],
+  plugins: ["solidity-coverage", "truffle-contract-size", "truffle-plugin-verify"],
   networks: {
     test: {
       host: "127.0.0.1",
@@ -40,6 +40,17 @@ module.exports = {
       timeoutBlocks: 200,
       skipDryRun: true,
     },
+    mainnet: {
+      provider: function () {
+        // eslint-disable-next-line prettier/prettier
+        return new HDWalletProvider(mainnet.mnemonic, `https://ropsten.infura.io/v3/${mainnet.projectId}`);
+      },
+      network_id: 3, // Ropsten's id
+      gas: 5500000, // Ropsten has a lower block limit than mainnet
+      confirmations: 2, // # of confs to wait between deployments. (default: 0)
+      timeoutBlocks: 200, // # of blocks before a deployment times out  (minimum/default: 50)
+      skipDryRun: true, // Skip dry run before migrations? (default: false for public nets )  //make sure this gas allocation isn't over 4M, which is the max
+    },
   },
   compilers: {
     solc: {
@@ -52,4 +63,7 @@ module.exports = {
   },
   contracts_directory: "./contracts/",
   contracts_build_directory: "./abis/",
+  api_keys: {
+    etherscan: ethscanApiKey,
+  },
 };

@@ -24,18 +24,4 @@ module.exports = async function (deployer, network, accounts) {
 
   await deployer.deploy(AAGToken, admin, recoveryAdmin, timelockPeriod, lossless, losslessOn, { from: tokenContractOwner });
   await deployer.deploy(AAGVestingContract, AAGToken.address, { from: vestingWalletOwner });
-
-  let tokenContract = await AAGToken.deployed();
-
-  // set IDO date
-  if (network !== "test") {
-    if (network == "live") {
-      await tokenContract.setTokenBirthday(Math.round(new Date("2021-11-01") / 1000));
-    }
-    if (network == "test") {
-      let blockTime = await time.latest();
-      const birthdayDate = blockTime.add(time.duration.minutes(1));
-      await tokenContract.setTokenBirthday(birthdayDate);
-    }
-  }
 };
