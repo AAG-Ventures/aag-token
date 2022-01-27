@@ -4,6 +4,7 @@
   "description": "AAG token infrastructure",
   "author": "marius@aag.ventures",
   "dependencies": {
+    "@harmony-js/core": "^0.1.57",
     "@openzeppelin/contracts": "^4.3.3",
     "@truffle/hdwallet-provider": "^1.7.0",
     "babel-polyfill": "^6.26.0",

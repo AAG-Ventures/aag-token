@@ -1,13 +1,12 @@
 /* eslint-disable no-undef */
 const AAGToken = artifacts.require("AAGToken");
-const AAGVestingContract = artifacts.require("AAGVestingContract");
 // const { time } = require('@openzeppelin/test-helpers');
 
 module.exports = async function (deployer, network, accounts) {
-  const tokenContractOwner = accounts[0];
-  const vestingWalletOwner = accounts[1]; // vesting wallet
-  const recoveryAdmin = accounts[2];
-  const admin = accounts[3];
+  console.log(deployer, network, accounts);
+  let tokenContractOwner = accounts[0];
+  let recoveryAdmin = accounts[2];
+  let admin = accounts[3];
 
   const timelockPeriod = 3600;
 
@@ -22,6 +21,11 @@ module.exports = async function (deployer, network, accounts) {
     losslessOn = true;
   }
 
+  if (network === "harmonyTestnet") {
+    tokenContractOwner = accounts[0];
+    recoveryAdmin = accounts[0];
+    admin = accounts[0];
+  }
+
   await deployer.deploy(AAGToken, admin, recoveryAdmin, timelockPeriod, lossless, losslessOn, { from: tokenContractOwner });
-  await deployer.deploy(AAGVestingContract, AAGToken.address, { from: vestingWalletOwner });
 };

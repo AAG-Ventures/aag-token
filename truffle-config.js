@@ -2,8 +2,36 @@
 require("babel-register");
 require("babel-polyfill");
 
-const { ropsten, rinkeby, etherscan: ethscanApiKey, mainnet } = require("./secrets.json");
+const { ropsten, rinkeby, etherscan: ethscanApiKey, mainnet, harmonySecrets } = require("./secrets.json");
 const HDWalletProvider = require("@truffle/hdwallet-provider");
+const { TruffleProvider } = require("@harmony-js/core");
+const Web3 = require("web3");
+
+const web3 = new Web3();
+
+const harmonyTestnetProvider = () => {
+  const truffleProvider = new TruffleProvider(
+    harmonySecrets.testnet.url_0,
+    { memonic: harmonySecrets.testnet.mnemonic },
+    { shardID: 0, chainId: 2 },
+    { gasLimit: "60000000", gasPrice: web3.utils.toWei("50") }
+  );
+  const newAcc = truffleProvider.addByPrivateKey(harmonySecrets.testnet.privateKey);
+  truffleProvider.setSigner(newAcc);
+  return truffleProvider;
+};
+
+const harmonyMainnetProvider = () => {
+  const truffleProvider = new TruffleProvider(
+    harmonySecrets.mainnet.url_0,
+    { memonic: harmonySecrets.mainnet.mnemonic },
+    { shardID: 0, chainId: 1 },
+    { gasLimit: "60000000", gasPrice: web3.utils.toWei("50") }
+  );
+  const newAcc = truffleProvider.addByPrivateKey(harmonySecrets.mainnet.privateKey);
+  truffleProvider.setSigner(newAcc);
+  return truffleProvider;
+};
 
 module.exports = {
   plugins: ["solidity-coverage", "truffle-contract-size", "truffle-plugin-verify"],
@@ -50,6 +78,14 @@ module.exports = {
       confirmations: 2, // # of confs to wait between deployments. (default: 0)
       timeoutBlocks: 200, // # of blocks before a deployment times out  (minimum/default: 50)
       skipDryRun: true, // Skip dry run before migrations? (default: false for public nets )  //make sure this gas allocation isn't over 4M, which is the max
+    },
+    harmonyTestnet: {
+      network_id: "2",
+      provider: harmonyTestnetProvider,
+    },
+    harmonyMainnet: {
+      network_id: "1",
+      provider: harmonyMainnetProvider,
     },
   },
   compilers: {
