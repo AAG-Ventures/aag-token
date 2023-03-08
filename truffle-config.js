@@ -2,7 +2,7 @@
 require("babel-register");
 require("babel-polyfill");
 
-const { ropsten, rinkeby, etherscan: ethscanApiKey, mainnet, harmonySecrets } = require("./secrets.json");
+const { etherscan: ethscanApiKey, secrets } = require("./secrets.json");
 const HDWalletProvider = require("@truffle/hdwallet-provider");
 const { TruffleProvider } = require("@harmony-js/core");
 const Web3 = require("web3");
@@ -10,25 +10,15 @@ const Web3 = require("web3");
 const web3 = new Web3();
 
 const harmonyTestnetProvider = () => {
-  const truffleProvider = new TruffleProvider(
-    harmonySecrets.testnet.url_0,
-    { memonic: harmonySecrets.testnet.mnemonic },
-    { shardID: 0, chainId: 2 },
-    { gasLimit: "60000000", gasPrice: web3.utils.toWei("50") }
-  );
-  const newAcc = truffleProvider.addByPrivateKey(harmonySecrets.testnet.privateKey);
+  const truffleProvider = new TruffleProvider(secrets.testnet.url_0, { memonic: secrets.testnet.mnemonic }, { shardID: 0, chainId: 2 }, { gasLimit: "60000000", gasPrice: web3.utils.toWei("50") });
+  const newAcc = truffleProvider.addByPrivateKey(secrets.testnet.privateKey);
   truffleProvider.setSigner(newAcc);
   return truffleProvider;
 };
 
 const harmonyMainnetProvider = () => {
-  const truffleProvider = new TruffleProvider(
-    harmonySecrets.mainnet.url_0,
-    { memonic: harmonySecrets.mainnet.mnemonic },
-    { shardID: 0, chainId: 1 },
-    { gasLimit: "60000000", gasPrice: web3.utils.toWei("50") }
-  );
-  const newAcc = truffleProvider.addByPrivateKey(harmonySecrets.mainnet.privateKey);
+  const truffleProvider = new TruffleProvider(secrets.mainnet.url_0, { memonic: secrets.mainnet.mnemonic }, { shardID: 0, chainId: 1 }, { gasLimit: "60000000", gasPrice: web3.utils.toWei("50") });
+  const newAcc = truffleProvider.addByPrivateKey(secrets.mainnet.privateKey);
   truffleProvider.setSigner(newAcc);
   return truffleProvider;
 };
@@ -49,7 +39,7 @@ module.exports = {
     ropsten: {
       provider: function () {
         // eslint-disable-next-line prettier/prettier
-        return new HDWalletProvider(ropsten.mnemonic, `https://ropsten.infura.io/v3/${ropsten.projectId}`);
+        return new HDWalletProvider(secrets.mainnet.privateKey, `https://ropsten.infura.io/v3/${ropsten.projectId}`);
       },
       network_id: 3, // Ropsten's id
       gas: 5500000, // Ropsten has a lower block limit than mainnet
@@ -60,7 +50,7 @@ module.exports = {
     rinkeby: {
       provider: function () {
         // eslint-disable-next-line prettier/prettier
-        return new HDWalletProvider(ropsten.mnemonic, `https://rinkeby.infura.io/v3/${rinkeby.projectId}`);
+        return new HDWalletProvider(secrets.mainnet.privateKey, `https://rinkeby.infura.io/v3/${rinkeby.projectId}`);
       },
       network_id: 4,
       gas: 5500000,
@@ -71,7 +61,7 @@ module.exports = {
     mainnet: {
       provider: function () {
         // eslint-disable-next-line prettier/prettier
-        return new HDWalletProvider(mainnet.mnemonic, `https://ropsten.infura.io/v3/${mainnet.projectId}`);
+        return new HDWalletProvider(secrets.mainnet.privateKey, `https://ropsten.infura.io/v3/${mainnet.projectId}`);
       },
       network_id: 3, // Ropsten's id
       gas: 5500000, // Ropsten has a lower block limit than mainnet

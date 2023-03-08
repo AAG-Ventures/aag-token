@@ -30,8 +30,9 @@ contract AAGVestingContract is ReentrancyGuard, Context, Ownable {
   IERC20 public token;
   uint256 private constant ONE_DAY_IN_SECONDS = 1 days;
 
-  constructor(IERC20 _token) {
+  constructor(IERC20 _token, address _owner) {
     token = _token;
+    transferOwnership(_owner);
   }
 
   // Create vesting schedule
