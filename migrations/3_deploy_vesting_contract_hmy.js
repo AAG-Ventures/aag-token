@@ -3,8 +3,8 @@ const AAGVestingContract = artifacts.require("AAGVestingContract");
 
 module.exports = async function (deployer, network, accounts) {
   let vestingWalletOwner = accounts[0]; // vesting wallet
-  let aagTokenContract = "0xbd9d810bb361A18B7e703d6dDC01b721e1c4BdAA";
-  const owner = "0x9A3C0BB204A4cDbD788ee95bede7f1F905b413B7";
+  let aagTokenContract = "0xae0609a062a4eaed49de28c5f6a193261e0150ea";
+  const owner = "0x40C288725051113ACa6c800b43b95F37928466B8";
 
   await deployer.deploy(AAGVestingContract, aagTokenContract, owner, { from: vestingWalletOwner });
 };
